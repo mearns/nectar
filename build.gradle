@@ -1,0 +1,55 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'org.ajoberstar.grgit:grgit-gradle:4.0.1'
+    }
+}
+
+apply plugin: 'org.ajoberstar.grgit'
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    //Unit testing framework.
+    testImplementation 'junit:junit:4.13'
+}
+
+ext {
+    gitCommit = "<none>"; //grgit?.head()?.abbreviatedId
+    gitBranch = "<none>"; //grgit?.branch?.current()?.name
+}
+
+//Attributes to add to Jar and ShadowJar
+Map<String, String> jarAttributes = [
+    "Gradle-Version": gradle.gradleVersion,
+    "Host": InetAddress.getLocalHost().getHostName(),
+    "Built-By": System.getProperty("user.name"),
+    "Build-Jdk": System.getProperty("java.version"),
+    "GradleProjectName": project.name,
+] + (Map<String, String>)[
+    //Add more jar attributes from ENV VARs, if they exist.
+    "BUILD_ID"     : "Build-Id",
+    "BUILD_NUMBER" : "Build-Number",
+    "HG_COMMIT"    : "HG-Commit",
+    "HG_BRANCH"    : "HG-Branch",
+    "APP_VERSION"  : "App-Version",
+    "KICKED_OFF_BY": "Kicked-Off-By"
+]
+    .collectEntries { String envVar, String attrName -> [attrName, System.getenv(envVar) ] }
+    .findAll { attrName, envValue -> envValue }
+
+jar {
+    manifest {
+        attributes(jarAttributes)
+    }
+}
